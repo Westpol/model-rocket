@@ -1,16 +1,36 @@
-#include <Servo.h>
+const int estep = 1;
+const int edir = 0;
+const int en = 14;
+const int LEDD_BUILTIN = 27;
 
-Servo myservo;
+unsigned long milli = 0;
+unsigned long milliLed = 0;
 
-int pos = 0;    // variable to store the servo position
+void setup(){
+  pinMode(en, OUTPUT);
+  pinMode(estep, OUTPUT);
+  pinMode(edir, OUTPUT);
+  pinMode(LEDD_BUILTIN, OUTPUT);
 
-void setup() {
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
-  pinMode(A0, INPUT);
-  Serial.begin(115200);
+  digitalWrite(en, LOW);
+  digitalWrite(edir, HIGH);
+  milli = millis();
+  milliLed = millis();
 }
 
-void loop() {
-  myservo.writeMicroseconds(map(analogRead(A0),0,1024,1000,2000));
-  Serial.println(analogRead(A0));
+void loop(){
+  digitalWrite(estep, HIGH);
+  delayMicroseconds(20);
+  digitalWrite(estep, LOW);
+  delayMicroseconds(20);
+
+  if(millis() > milli + 1000){
+    digitalWrite(edir, !digitalRead(edir));
+    digitalWrite(LEDD_BUILTIN, HIGH);
+    milliLed = millis();
+    milli = millis();
+  }
+  if(millis() > milliLed + 10){
+    digitalWrite(LEDD_BUILTIN, LOW);
+  }
 }
