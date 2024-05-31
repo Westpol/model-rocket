@@ -11,6 +11,9 @@ float servoSetpoints[4] = {middles[0], middles[1], middles[2], middles[3]};
 float servoDirectionsYaw[4] = {1, 1, 1, 1};
 float gyroX;
 
+long milli;
+bool switsch = true;
+int manMove = 0;
 
 void setup() {
   dataBus.begin(115200);
@@ -26,14 +29,31 @@ void setup() {
   delay(1000);
   mpu.calcOffsets(true,true); // gyro and accelero
   Serial.println("Done!\n");
+  milli = millis() + 10;
 }
 
 void loop() {
-  mpu.update();
-  gyroX = mpu.getGyroX();
-  float p_value = setpoint - (gyroX * 2); 
+  //mpu.update();
+  //gyroX = mpu.getGyroX();
+  //float p_value = setpoint - (gyroX * 2); 
   for(int i = 0; i <= 3; i++){
-    servoSetpoints[i] = minmax(middles[i] + (p_value * servoDirectionsYaw[i]), 1350, 1650);
+    servoSetpoints[i] = minmax(middles[i] + (manMove * servoDirectionsYaw[i]), 1100, 1900);
+  }
+
+  if(millis() > milli){
+    if(switsch){
+      manMove++;
+    }
+    else{
+      manMove--;
+    }
+    if(manMove < -400){
+      switsch = true;
+    }
+    if(manMove > 400){
+      switsch = false;
+    }
+    milli = millis() + 1;
   }
 
   sendPackage();
