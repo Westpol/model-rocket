@@ -14,11 +14,19 @@ SoftwareSerial dataBus(10, 9);
 bfs::SbusRx sbus_rx(&Serial);
 bfs::SbusData data;
 
-float offsets[6] = {0, 0, 0, 0, 0, 0};
-float servoSetpoints[6] = {0, 0, 1500, 1500, 1500, 1500};
-float servoDirectionsYaw[6] = {0, 0, 1, 1, 1, 1};
+float neutral_settings[6] = {1000, 1000, 1500, 1500, 1500, 1500};
+float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_settings[2], neutral_settings[3], neutral_settings[4], neutral_settings[5]};
+float servoDirections[4][6] = {{1, 1, 0, 0, 0, 0},     //thrust
+                                  {0, 0, 1, 1, 0, 0},     //nick
+                                  {0, 0, 1, 1, 1, 1},     //yaw
+                                  {0, 0, 0, 0, 1, 1}};    //roll
+
+int servo_neutral = 1500;
+
+int motors_idle = 1050;
 float gyroX, gyroY, gyroZ;
 
+int sbusToPwmSignals[6] = {0, 0, 0, 0, 0, 0};
 
 void setup() {
 
@@ -47,8 +55,8 @@ void loop() {
     servoSetpoints[i] = minmax(middles[i] + (p_value * servoDirectionsYaw[i]), 1100, 1900);
   }*/
 
-  servoSetpoints[0] = map(data.ch[0], 0, 2000, 1000, 2000);
-  servoSetpoints[1] = map(data.ch[0], 0, 2000, 1000, 2000);
+  calculateServoVals();
+
   sendPackage();
 }
 
@@ -73,7 +81,24 @@ void sendPackage(){
   dataBus.print(';');
 }
 
-int minmax(int val, int min, int max){
+void calculateServoVals(){
+
+  for(int i = 0; i < 6; i++){
+    servoSetpoints[i] = neutral_settings[i];
+  }
+
+  servoSetpoints[0] = minmax(map(data.ch[0], 200, 2000, 1000, 2000), 1000, 2000);   // simple throttle set
+  servoSetpoints[1] = minmax(map(data.ch[0], 200, 2000, 1000, 2000), 1000, 2000);
+
+                                  // add every control to the mix
+  for(int f = 1; f < 4; f++){     // goes through AER of the TAER control axis
+    for(int i = 2; i < 6; i++){   // goes through every Servo
+      servoSetpoints[i] += (minmax(map(data.ch[f], 200, 2000, 1000, 2000), 1000, 2000) - neutral_settings[i]) * servoDirections[f][i];
+    }
+  }
+}
+
+float minmax(float val, float min, float max){
   if(val < min){
     val = min;
   }
