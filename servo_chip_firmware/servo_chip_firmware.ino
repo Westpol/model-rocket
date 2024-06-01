@@ -51,7 +51,9 @@ void getPackage(){
         }
       }
       else {
+        if(message.length() == 4){
         finpwm[servoNum] = message.toInt();
+        }
         return;
       }
     }
