@@ -1,6 +1,8 @@
 #include "Wire.h"
-#include <MPU6050_light.h>
 #include "SoftwareSerial.h"
+
+#include <MPU6050_light.h>
+#include <Adafruit_BMP280.h>
 
 MPU6050 mpu(Wire);
 SoftwareSerial dataBus(10, 9);
