@@ -15,7 +15,7 @@ bfs::SbusRx sbus_rx(&Serial);
 bfs::SbusData data;
 
 float offsets[6] = {0, 0, 0, 0, 0, 0};
-float servoSetpoints[6] = {middles[0], middles[1], middles[2], middles[3], middles[4], middles[5]};
+float servoSetpoints[6] = {0, 0, 1500, 1500, 1500, 1500};
 float servoDirectionsYaw[6] = {0, 0, 1, 1, 1, 1};
 float gyroX, gyroY, gyroZ;
 
@@ -38,14 +38,17 @@ void loop() {
     data = sbus_rx.data();
   }
 
-  mpu.update();
+  /*mpu.update();
   gyroX = mpu.getGyroX();
   gyroY = mpu.getGyroY();
   gyroZ = mpu.getGyroZ();
   float p_value = -(gyroX * 2); 
   for(int i = 0; i <= 3; i++){
     servoSetpoints[i] = minmax(middles[i] + (p_value * servoDirectionsYaw[i]), 1100, 1900);
-  }
+  }*/
+
+  servoSetpoints[0] = map(data.ch[0], 0, 2000, 1000, 2000);
+  servoSetpoints[1] = map(data.ch[0], 0, 2000, 1000, 2000);
   sendPackage();
 }
 
