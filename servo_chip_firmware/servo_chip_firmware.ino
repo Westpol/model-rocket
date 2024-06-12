@@ -1,6 +1,6 @@
 #include "Servo.h"
 
-int finpwm[6] = {1500, 1500, 1500, 1500, 1500, 1500};
+int finpwm[6] = {1000, 1000, 1500, 1500, 1500, 1500};
 
 Servo fin1;
 Servo fin2;

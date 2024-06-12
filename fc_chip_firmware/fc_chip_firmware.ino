@@ -1,44 +1,62 @@
+#include <SPI.h>
 #include "Wire.h"
 #include "SoftwareSerial.h"
 
 #include <MPU6050_light.h>
 #include <Adafruit_BMP280.h>
+#include <SD.h>
+#include "sbus.h"
 
 MPU6050 mpu(Wire);
+
 SoftwareSerial dataBus(10, 9);
 
-float setpoint = 0;
-float middles[6] = {0, 0, 1500, 1500, 1500, 1500};
-float servoSetpoints[6] = {middles[0], middles[1], middles[2], middles[3], middles[4], middles[5]};
-float servoDirectionsYaw[6] = {0, 0, 1, 1, 1, 1};
-float gyroX;
+bfs::SbusRx sbus_rx(&Serial);
+bfs::SbusData data;
 
+float neutral_settings[6] = {1000, 1000, 1500, 1500, 1500, 1500};
+float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_settings[2], neutral_settings[3], neutral_settings[4], neutral_settings[5]};
+float servoDirections[4][6] = {{1, 1, 0, 0, 0, 0},     //thrust
+                                  {0, 0, 1, 1, 0, 0},     //nick
+                                  {0, 0, 1, 1, 1, 1},     //yaw
+                                  {0, 0, 0, 0, 1, 1}};    //roll
+
+int servo_neutral = 1500;
+
+int motors_idle = 1050;
+float gyroX, gyroY, gyroZ;
+
+int sbusToPwmSignals[6] = {0, 0, 0, 0, 0, 0};
 
 void setup() {
+
+  sbus_rx.Begin();
+
   dataBus.begin(115200);
-  Serial.begin(115200);
   Wire.begin();
   
   byte status = mpu.begin();
-  Serial.print(F("MPU6050 status: "));
-  Serial.println(status);
   while(status!=0){ } // stop everything if unable to connect to MPU6050
-  
-  Serial.println(F("Calculating offsets, do not move MPU6050"));
   delay(1000);
   mpu.calcOffsets(true, true); // gyro and accelero
-  Serial.println("Done!\n");
 }
 
 void loop() {
-  mpu.update();
+  if (sbus_rx.Read()) {
+    data = sbus_rx.data();
+  }
+
+  /*mpu.update();
   gyroX = mpu.getGyroX();
   gyroY = mpu.getGyroY();
   gyroZ = mpu.getGyroZ();
-  float p_value = setpoint - (gyroX * 2); 
+  float p_value = -(gyroX * 2); 
   for(int i = 0; i <= 3; i++){
     servoSetpoints[i] = minmax(middles[i] + (p_value * servoDirectionsYaw[i]), 1100, 1900);
-  }
+  }*/
+
+  calculateServoVals();
+
   sendPackage();
 }
 
@@ -63,7 +81,24 @@ void sendPackage(){
   dataBus.print(';');
 }
 
-int minmax(int val, int min, int max){
+void calculateServoVals(){
+
+  for(int i = 0; i < 6; i++){
+    servoSetpoints[i] = neutral_settings[i];
+  }
+
+  servoSetpoints[0] = minmax(map(data.ch[0], 200, 2000, 1000, 2000), 1000, 2000);   // simple throttle set
+  servoSetpoints[1] = minmax(map(data.ch[0], 200, 2000, 1000, 2000), 1000, 2000);
+
+                                  // add every control to the mix
+  for(int f = 1; f < 4; f++){     // goes through AER of the TAER control axis
+    for(int i = 2; i < 6; i++){   // goes through every Servo
+      servoSetpoints[i] += (minmax(map(data.ch[f], 200, 2000, 1000, 2000), 1000, 2000) - neutral_settings[i]) * servoDirections[f][i];
+    }
+  }
+}
+
+float minmax(float val, float min, float max){
   if(val < min){
     val = min;
   }
