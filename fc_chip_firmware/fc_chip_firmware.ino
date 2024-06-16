@@ -14,16 +14,15 @@ SoftwareSerial dataBus(10, 9);
 bfs::SbusRx sbus_rx(&Serial);
 bfs::SbusData data;
 
-float neutral_settings[6] = {1000, 1000, 1500, 1500, 1500, 1500};
+float neutral_settings[6] = {1000, 1000, 1600, 1600, 1600, 1600};
 float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_settings[2], neutral_settings[3], neutral_settings[4], neutral_settings[5]};
 float servoDirections[4][6] = {{1, 1, 0, 0, 0, 0},     //thrust
                                   {0, 0, 1, 1, 0, 0},     //nick
                                   {0, 0, 1, 1, 1, 1},     //yaw
                                   {0, 0, 0, 0, 1, 1}};    //roll
 
-int servo_neutral = 1500;
 
-int motors_idle = 1050;
+int motors_idle = 1063;
 float gyroX, gyroY, gyroZ;
 
 int sbusToPwmSignals[6] = {0, 0, 0, 0, 0, 0};
