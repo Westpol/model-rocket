@@ -27,10 +27,11 @@ void setup() {
   dataBus.begin(115200);
   Serial.begin(115200);
   Wire.begin();
+  sendPackage();
   
   byte status = mpu.begin();
   while(status!=0){ } // stop everything if unable to connect to MPU6050
-  delay(1000);
+  delay(2000);
   mpu.calcOffsets(true, true); // gyro and accelero
 }
 
@@ -81,12 +82,12 @@ void calculateServoVals(){
     servoSetpoints[i] = neutral_settings[i];
   }
 
-  servoSetpoints[0] = 1000;   // simple throttle set
-  servoSetpoints[1] = 1000;
+  servoSetpoints[0] = motors_idle;   // simple throttle set
+  servoSetpoints[1] = motors_idle;
 
                                   // add every control to the mix
   for(int f = 1; f < 4; f++){     // goes through AER of the TAER control axis
-    for(int i = 2; i < 6; i++){   // goes through every Servo
+    for(int i = 0; i < 6; i++){   // goes through every Servo
       servoSetpoints[i] = minmax(servoSetpoints[i] + (pid_corrections[f] * servoDirections[f][i]), 1000, 2000);
     }
   }

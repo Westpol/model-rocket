@@ -9,6 +9,8 @@ Servo fin4;
 Servo fin5;
 Servo fin6;
 
+unsigned long timeoutCounter;
+
 void setup() {
   Serial.begin(115200);
   fin1.attach(2);   // first Stack
@@ -25,6 +27,7 @@ void loop() {
     char Buffer;
     Buffer = Serial.read();
     if(Buffer == '%'){
+      timeoutCounter = millis();
       getPackage();
     }
   }
@@ -34,6 +37,10 @@ void loop() {
   fin4.writeMicroseconds(finpwm[3]);
   fin5.writeMicroseconds(finpwm[4]);
   fin6.writeMicroseconds(finpwm[5]);
+
+  if(timeoutCounter + 100 < millis()){
+    commLostFailsafe();
+  }
 
 }
 
@@ -63,12 +70,24 @@ void getPackage(){
       }
       else {
         if(message.length() == 4){
-          if (1000 < message.toInt() < 2000) {
+          if (1000 < message.toInt() && message.toInt() < 2000) {
             finpwm[servoNum] = message.toInt();
           }
         }
         return;
       }
     }
+  }
+}
+
+void commLostFailsafe(){
+  while(true){
+    int failsafeSet[6] = {1000, 1000, 1500, 1500, 1500, 1500};
+    fin1.writeMicroseconds(failsafeSet[0]);
+    fin2.writeMicroseconds(failsafeSet[1]);
+    fin3.writeMicroseconds(failsafeSet[2]);
+    fin4.writeMicroseconds(failsafeSet[3]);
+    fin5.writeMicroseconds(failsafeSet[4]);
+    fin6.writeMicroseconds(failsafeSet[5]);
   }
 }
