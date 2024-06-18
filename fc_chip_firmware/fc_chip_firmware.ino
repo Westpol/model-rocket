@@ -43,14 +43,10 @@ void loop() {
     data = sbus_rx.data();
   }
 
-  /*mpu.update();
+  mpu.update();
   gyroX = mpu.getGyroX();
   gyroY = mpu.getGyroY();
   gyroZ = mpu.getGyroZ();
-  float p_value = -(gyroX * 2); 
-  for(int i = 0; i <= 3; i++){
-    servoSetpoints[i] = minmax(middles[i] + (p_value * servoDirectionsYaw[i]), 1100, 1900);
-  }*/
 
   calculateServoVals();
 
