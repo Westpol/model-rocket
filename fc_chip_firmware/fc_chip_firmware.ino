@@ -14,18 +14,16 @@ SoftwareSerial dataBus(10, 9);
 bfs::SbusRx sbus_rx(&Serial);
 bfs::SbusData data;
 
-float neutral_settings[6] = {1000, 1000, 1600, 1600, 1600, 1600};
+float neutral_settings[6] = {1000, 1000, 1440, 1590, 1560, 1400};
 float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_settings[2], neutral_settings[3], neutral_settings[4], neutral_settings[5]};
-float servoDirections[4][6] = {{1, 1, 0, 0, 0, 0},     //thrust
-                                  {0, 0, 1, 1, 0, 0},     //nick
-                                  {0, 0, 1, 1, 1, 1},     //yaw
-                                  {0, 0, 0, 0, 1, 1}};    //roll
+float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
+                                {0, 0, 0, 0, 1, -1},    //roll
+                                {0, 0, -1, 1, 0, 0},     //nick
+                                {0, 0, 1, 1, 1, 1} };    //yaw
 
 
 int motors_idle = 1063;
 float gyroX, gyroY, gyroZ;
-
-int sbusToPwmSignals[6] = {0, 0, 0, 0, 0, 0};
 
 void setup() {
 
@@ -73,10 +71,10 @@ void sendPackage(){
   dataBus.print((int)servoSetpoints[3]);
   dataBus.print(';');
   dataBus.print("%4,");   // SERVO
-  dataBus.print((int)servoSetpoints[3]);
+  dataBus.print((int)servoSetpoints[4]);
   dataBus.print(';');
   dataBus.print("%5,");   // SERVO
-  dataBus.print((int)servoSetpoints[3]);
+  dataBus.print((int)servoSetpoints[5]);
   dataBus.print(';');
 }
 
@@ -92,7 +90,7 @@ void calculateServoVals(){
                                   // add every control to the mix
   for(int f = 1; f < 4; f++){     // goes through AER of the TAER control axis
     for(int i = 2; i < 6; i++){   // goes through every Servo
-      servoSetpoints[i] += (minmax(map(data.ch[f], 200, 2000, 1000, 2000), 1000, 2000) - neutral_settings[i]) * servoDirections[f][i];
+      servoSetpoints[i] = minmax(servoSetpoints[i] + (map(data.ch[f], 200, 2000, -500, 500) * servoDirections[f][i]), 1000, 2000);
     }
   }
 }
