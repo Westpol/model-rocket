@@ -10,6 +10,9 @@ Servo fin5;
 Servo fin6;
 
 unsigned long timeoutCounter;
+unsigned long rampupProtectionTime;
+int maxThrottle0 = 1200;
+int maxThrottle1 = 1200;
 
 void setup() {
   Serial.begin(115200);
@@ -20,19 +23,34 @@ void setup() {
   fin4.attach(6);   // second Stack
   fin5.attach(7);
   fin6.attach(8);
-  while(Serial.available() <= 0){}
+  while(Serial.available() <= 0){}    // wait for serial and initialize timer vars
   timeoutCounter = millis();
+  rampupProtectionTime = millis() + 20;
 }
 
 void loop() {
-  if(Serial.available() > 0){
+  if(Serial.available() > 0){   // wait for Serial Input and handle out to getPackage once start char is recieved
     char Buffer;
     Buffer = Serial.read();
     if(Buffer == '%'){
-      timeoutCounter = millis();
+      timeoutCounter = millis() + 500;
       getPackage();
     }
   }
+
+  if(finpwm[0] > maxThrottle0){
+    finpwm[0] = maxThrottle0;
+  }
+  if(finpwm[1] > maxThrottle1){
+    finpwm[1] = maxThrottle1;
+  }
+
+  if(rampupProtectionTime < millis()){
+    maxThrottle0 = finpwm[0] + 200;
+    maxThrottle1 = finpwm[0] + 200;
+    rampupProtectionTime = millis() + 20;
+  }
+
   fin1.writeMicroseconds(finpwm[0]);
   fin2.writeMicroseconds(finpwm[1]);
   fin3.writeMicroseconds(finpwm[2]);
@@ -40,7 +58,7 @@ void loop() {
   fin5.writeMicroseconds(finpwm[4]);
   fin6.writeMicroseconds(finpwm[5]);
 
-  if(timeoutCounter + 100 < millis()){
+  if(timeoutCounter < millis()){
     commLostFailsafe();
   }
 
