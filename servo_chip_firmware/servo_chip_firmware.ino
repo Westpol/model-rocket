@@ -20,6 +20,8 @@ void setup() {
   fin4.attach(6);   // second Stack
   fin5.attach(7);
   fin6.attach(8);
+  while(Serial.available() <= 0){}
+  timeoutCounter = millis();
 }
 
 void loop() {
