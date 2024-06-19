@@ -20,14 +20,18 @@ float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
 
 int motors_idle = 1063;
 float gyroX, gyroY, gyroZ;
+float lastGyroX, lastGyroY, lastGyroZ;
 float pid_corrections[4] {0, 0, 0, 0};    // thrust, roll, nick, yaw
+
+float p[4] = {0, 2, 3, 3};
+float d[4] = {0, 4, 6, 6};
+float i[4] = {0, 0, 0, 0};
 
 void setup() {
 
   dataBus.begin(115200);
   Serial.begin(115200);
   Wire.begin();
-  sendPackage();
   
   byte status = mpu.begin();
   while(status!=0){ } // stop everything if unable to connect to MPU6050
@@ -46,9 +50,18 @@ void loop() {
   Serial.print(gyroY);
   Serial.print(" | ");
   Serial.println(gyroZ);
-  pid_corrections[3] = -gyroX * 2;
-  pid_corrections[2] = -gyroY * 3;
-  pid_corrections[1] = gyroZ * 3;
+
+  pid_corrections[3] = -gyroX * p[1];    // P-val
+  pid_corrections[2] = -gyroY * p[2];
+  pid_corrections[1] = gyroZ * p[3];
+
+  pid_corrections[3] += (lastGyroX - gyroX) * d[1];
+  pid_corrections[2] += (lastGyroY - gyroY) * d[2];
+  pid_corrections[1] += -(lastGyroZ - gyroZ) * d[3];
+
+  lastGyroX = gyroX;
+  lastGyroY = gyroY;
+  lastGyroZ = gyroZ;
 
   calculateServoVals();
 

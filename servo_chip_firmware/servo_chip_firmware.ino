@@ -46,8 +46,8 @@ void loop() {
   }
 
   if(rampupProtectionTime < millis()){
-    maxThrottle0 = finpwm[0] + 200;
-    maxThrottle1 = finpwm[0] + 200;
+    maxThrottle0 = finpwm[0] + 2;
+    maxThrottle1 = finpwm[1] + 2;
     rampupProtectionTime = millis() + 20;
   }
 
