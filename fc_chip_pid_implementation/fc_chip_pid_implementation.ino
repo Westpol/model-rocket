@@ -45,11 +45,11 @@ void loop() {
   gyroX = mpu.getGyroX();
   gyroY = mpu.getGyroY();
   gyroZ = mpu.getGyroZ();
-  Serial.print(gyroX);
+  /*Serial.print(gyroX);
   Serial.print(" | ");
   Serial.print(gyroY);
   Serial.print(" | ");
-  Serial.println(gyroZ);
+  Serial.println(gyroZ);*/
 
   pid_corrections[3] = -gyroX * p[1];    // P-val
   pid_corrections[2] = -gyroY * p[2];
