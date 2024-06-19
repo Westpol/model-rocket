@@ -1,6 +1,6 @@
 #include "Servo.h"
 
-int finpwm[6] = {1000, 1000, 0, 0, 0, 0};
+int finpwm[6] = {1000, 1000, 1500, 1500, 1500, 1500};
 
 Servo fin1;
 Servo fin2;
@@ -23,7 +23,12 @@ void setup() {
   fin4.attach(6);   // second Stack
   fin5.attach(7);
   fin6.attach(8);
-  while(Serial.available() <= 0){}    // wait for serial and initialize timer vars
+  /*while(Serial.available() == 0){
+    fin1.writeMicroseconds(1300);
+    delay(500);
+    fin1.writeMicroseconds(1700);
+    delay(500);
+  }    // wait for serial and initialize timer vars*/
   timeoutCounter = millis();
   rampupProtectionTime = millis() + 20;
 }
@@ -46,8 +51,8 @@ void loop() {
   }
 
   if(rampupProtectionTime < millis()){
-    maxThrottle0 = finpwm[0] + 2;
-    maxThrottle1 = finpwm[1] + 2;
+    maxThrottle0 = finpwm[0] + 200;
+    maxThrottle1 = finpwm[1] + 200;
     rampupProtectionTime = millis() + 20;
   }
 
@@ -58,9 +63,9 @@ void loop() {
   fin5.writeMicroseconds(finpwm[4]);
   fin6.writeMicroseconds(finpwm[5]);
 
-  if(timeoutCounter < millis()){
+  /*if(timeoutCounter < millis()){
     commLostFailsafe();
-  }
+  }*/
 
 }
 
