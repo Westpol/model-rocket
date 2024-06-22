@@ -15,7 +15,7 @@ float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_set
 float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
                                 {0, 0, 0, 0, 1, -1},    //roll
                                 {0, 0, -1, 1, 0, 0},     //nick
-                                {0, 0, 1, 1, 1, 1} };    //yaw
+                                {-1, 1, 1, 1, 1, 1} };    //yaw
 
 
 int motors_idle = 1063;
@@ -23,8 +23,8 @@ float gyroX, gyroY, gyroZ;
 float lastGyroX, lastGyroY, lastGyroZ;
 float pid_corrections[4] {0, 0, 0, 0};    // thrust, roll, nick, yaw
 
-float p[4] = {2, 2, 3, 3};
-float d[4] = {2, 4, 6, 6};
+float p[4] = {0, 2, 3, 3};
+float d[4] = {0, 4, 6, 6};
 float i[4] = {0, 0, 0, 0};
 
 void setup() {
@@ -54,12 +54,12 @@ void loop() {
   pid_corrections[3] = -gyroX * p[1];    // P-val
   pid_corrections[2] = -gyroY * p[2];
   pid_corrections[1] = gyroZ * p[3];
-  pid_corrections[0] = gyroX * p[0];
+  //pid_corrections[0] = gyroX * p[0];
 
   pid_corrections[3] += (lastGyroX - gyroX) * d[1];
   pid_corrections[2] += (lastGyroY - gyroY) * d[2];
   pid_corrections[1] += -(lastGyroZ - gyroZ) * d[3];
-  pid_corrections[0] += (lastGyroX - gyroX) * d[0];
+  //pid_corrections[0] += (lastGyroX - gyroX) * d[0];
 
   lastGyroX = gyroX;
   lastGyroY = gyroY;
@@ -101,10 +101,16 @@ void calculateServoVals(){
   servoSetpoints[1] = motors_idle;
 
                                   // add every control to the mix
-  for(int f = 0; f < 4; f++){     // goes through AER of the TAER control axis
+  for(int f = 1; f < 4; f++){     // goes through AER of the TAER control axis
     for(int i = 0; i < 6; i++){   // goes through every Servo
       servoSetpoints[i] = minmax(servoSetpoints[i] + (pid_corrections[f] * servoDirections[f][i]), 1000, 2000);
     }
+  }
+  if(servoSetpoints[0] < motors_idle){
+    servoSetpoints[0] = motors_idle;
+  }
+  if(servoSetpoints[1] < motors_idle){
+    servoSetpoints[1] = motors_idle;
   }
 }
 
