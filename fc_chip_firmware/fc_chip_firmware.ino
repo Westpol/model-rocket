@@ -1,3 +1,12 @@
+/*
+Channels:
+Throttle = 0
+Aileron = 1
+Elevator = 2
+Roll = 3
+Armswitch = 4
+*/
+
 #include <SPI.h>
 #include "Wire.h"
 #include "SoftwareSerial.h"
