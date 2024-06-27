@@ -34,6 +34,13 @@ float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
 int motors_idle = 1063;
 float gyroX, gyroY, gyroZ;
 
+
+int sbus_min = 173;
+int sbus_max = 1810;
+
+bool armswitch_latch = false;
+bool arming_failed = true;
+
 void setup() {
 
   sbus_rx.Begin();
@@ -89,14 +96,50 @@ void calculateServoVals(){
     servoSetpoints[i] = neutral_settings[i];
   }
 
-  servoSetpoints[0] = minmax(map(data.ch[0], 200, 2000, 1000, 2000), 1000, 2000);   // simple throttle set
-  servoSetpoints[1] = minmax(map(data.ch[0], 200, 2000, 1000, 2000), 1000, 2000);
+  servoSetpoints[0] = minmax(map(data.ch[0], sbus_min, sbus_max, 1000, 2000), 1000, 2000);   // simple throttle set
+  servoSetpoints[1] = minmax(map(data.ch[0], sbus_min, sbus_max, 1000, 2000), 1000, 2000);
 
                                   // add every control to the mix
   for(int f = 1; f < 4; f++){     // goes through AER of the TAER control axis
     for(int i = 2; i < 6; i++){   // goes through every Servo
-      servoSetpoints[i] = minmax(servoSetpoints[i] + (map(data.ch[f], 200, 2000, -500, 500) * servoDirections[f][i]), 1000, 2000);
+      servoSetpoints[i] = minmax(servoSetpoints[i] + (map(data.ch[f], sbus_min, sbus_max, -500, 500) * servoDirections[f][i]), 1000, 2000);
     }
+  }
+
+  if (data.ch[4] < 500) {
+    for (int i = 0; i < 6; i++) {
+      servoSetpoints[i] = neutral_settings[i];
+    }
+  }
+  else if (data.ch[4] > 500 && data.ch[4] < 1500) {
+    servoSetpoints[0] = neutral_settings[0];
+    servoSetpoints[1] = neutral_settings[1];
+  }
+  else if (data.ch[4] > 1500){
+    servoSetpoints[0] = minmax(servoSetpoints[0], motors_idle, 2000);
+    servoSetpoints[1] = minmax(servoSetpoints[1], motors_idle, 2000);
+  }
+
+    if(data.ch[4] > 1500 && armswitch_latch == false){    //IMPORTANT: Arming handling and safety in case you arm with throttle high
+    if(data.ch[0] <= 200){
+      armswitch_latch = true;
+      arming_failed = false;
+    }
+    if(data.ch[0] > 200){
+      armswitch_latch = true;
+      arming_failed = true;
+    }
+  }
+
+  if(data.ch[4] < 1500 && armswitch_latch == true){
+    armswitch_latch = false;
+    arming_failed = false;
+  }
+
+
+  if(armswitch_latch == false || arming_failed == true){
+    servoSetpoints[0] = neutral_settings[0];
+    servoSetpoints[1] = neutral_settings[1];
   }
 }
 
