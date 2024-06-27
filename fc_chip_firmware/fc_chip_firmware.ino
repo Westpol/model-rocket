@@ -23,7 +23,7 @@ SoftwareSerial dataBus(10, 9);
 bfs::SbusRx sbus_rx(&Serial);
 bfs::SbusData data;
 
-float neutral_settings[6] = {1000, 1000, 1440, 1590, 1560, 1400};
+float neutral_settings[6] = {1001, 1001, 1440, 1590, 1560, 1400};
 float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_settings[2], neutral_settings[3], neutral_settings[4], neutral_settings[5]};
 float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
                                 {0, 0, 0, 0, 1, -1},    //roll
@@ -120,7 +120,7 @@ void calculateServoVals(){
     servoSetpoints[1] = minmax(servoSetpoints[1], motors_idle, 2000);
   }
 
-    if(data.ch[4] > 1500 && armswitch_latch == false){    //IMPORTANT: Arming handling and safety in case you arm with throttle high
+  if(data.ch[4] > 1500 && armswitch_latch == false){
     if(data.ch[0] <= 200){
       armswitch_latch = true;
       arming_failed = false;
