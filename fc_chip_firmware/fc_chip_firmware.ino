@@ -23,12 +23,13 @@ SoftwareSerial dataBus(10, 9);
 bfs::SbusRx sbus_rx(&Serial);
 bfs::SbusData data;
 
-float neutral_settings[6] = {1001, 1001, 1440, 1590, 1560, 1400};
+float neutral_settings[6] = {1001, 1001, 1440, 1450, 1450, 1400};
 float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_settings[2], neutral_settings[3], neutral_settings[4], neutral_settings[5]};
 float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
                                 {0, 0, 0, 0, 1, -1},    //roll
                                 {0, 0, -1, 1, 0, 0},     //nick
-                                {0, 0, 1, 1, 1, 1} };    //yaw
+                                {0, 0, 1, 1, 1, 1}};    //yaw WITHOUT motors
+                                //{-1, 1, 1, 1, 1, 1}};    //yaw WITH motors
 
 
 int motors_idle = 1063;
