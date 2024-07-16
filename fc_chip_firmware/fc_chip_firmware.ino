@@ -5,6 +5,30 @@ Aileron = 1
 Elevator = 2
 Roll = 3
 Armswitch = 4
+
+Pins:
+-------------------
+SD Karte
+CS = 13
+SCK = 10
+MOSI = 11
+MISO = 12
+-------------------
+Gyro
+SCL = A5
+SDA = A4
+-------------------
+Baro
+SCL = A5
+SDA = A4
+-------------------
+XF Nano RX
+SBUS = 0
+-------------------
+Servo Comm
+Softwareserial TX = 9
+-Unused- Softwareserial RX = 10
+-------------------
 */
 
 #include <SPI.h>
@@ -15,6 +39,7 @@ Armswitch = 4
 #include <Adafruit_BMP280.h>
 #include <SD.h>
 #include "sbus.h"
+
 
 MPU6050 mpu(Wire);
 
@@ -72,9 +97,9 @@ void loop() {
   }
 
   mpu.update();
-  gyroX = mpu.getGyroX() + minmax(map(data.ch[3], sbus_min, sbus_max, -roll_deg, roll_deg), -roll_deg, roll_deg);
+  gyroX = mpu.getGyroX() + minmax(map(data.ch[3], sbus_min, sbus_max, -yaw_deg, yaw_deg), -yaw_deg, yaw_deg);
   gyroY = mpu.getGyroY() - minmax(map(data.ch[2], sbus_min, sbus_max, -nick_deg, nick_deg), -nick_deg, nick_deg);
-  gyroZ = mpu.getGyroZ() + minmax(map(data.ch[1], sbus_min, sbus_max, -yaw_deg, yaw_deg), -yaw_deg, yaw_deg);
+  gyroZ = mpu.getGyroZ() + minmax(map(data.ch[1], sbus_min, sbus_max, -roll_deg, roll_deg), -roll_deg, roll_deg);
 
   pid_controller();
 
