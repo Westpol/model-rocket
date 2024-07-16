@@ -34,6 +34,7 @@ float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
 
 int motors_idle = 1063;
 float gyroX, gyroY, gyroZ;
+float lastGyroX, lastGyroY, lastGyroZ;
 
 
 int sbus_min = 173;
@@ -41,6 +42,16 @@ int sbus_max = 1810;
 
 bool armswitch_latch = false;
 bool arming_failed = true;
+
+float pid_corrections[4] {0, 0, 0, 0};    // thrust, roll, nick, yaw
+
+float p[4] = {0, 2, 3, 3};
+float d[4] = {0, 4, 6, 6};
+float i[4] = {0, 0, 0, 0};
+
+int roll_deg = 180;    // roll degrees at full stick reflection
+int nick_deg = 180;    // roll degrees at full stick reflection
+int yaw_deg = 180;    // roll degrees at full stick reflection
 
 void setup() {
 
@@ -61,13 +72,28 @@ void loop() {
   }
 
   mpu.update();
-  gyroX = mpu.getGyroX();
-  gyroY = mpu.getGyroY();
-  gyroZ = mpu.getGyroZ();
+  gyroX = mpu.getGyroX() + minmax(map(data.ch[3], sbus_min, sbus_max, -roll_deg, roll_deg), -roll_deg, roll_deg);
+  gyroY = mpu.getGyroY() - minmax(map(data.ch[2], sbus_min, sbus_max, -nick_deg, nick_deg), -nick_deg, nick_deg);
+  gyroZ = mpu.getGyroZ() + minmax(map(data.ch[1], sbus_min, sbus_max, -yaw_deg, yaw_deg), -yaw_deg, yaw_deg);
+
+  pid_controller();
 
   calculateServoVals();
 
   sendPackage();
+}
+
+void pid_controller(){
+  pid_corrections[3] = -gyroX * p[1];    // P-val
+  pid_corrections[2] = -gyroY * p[2];
+  pid_corrections[1] = gyroZ * p[3];
+
+  pid_corrections[3] += (lastGyroX - gyroX) * d[1];   // D-val
+  pid_corrections[2] += (lastGyroY - gyroY) * d[2];
+  pid_corrections[1] += -(lastGyroZ - gyroZ) * d[3];
+  lastGyroX = gyroX;
+  lastGyroY = gyroY;
+  lastGyroZ = gyroZ;
 }
 
 void sendPackage(){
@@ -97,16 +123,20 @@ void calculateServoVals(){
     servoSetpoints[i] = neutral_settings[i];
   }
 
-  servoSetpoints[0] = minmax(map(data.ch[0], sbus_min, sbus_max, 1000, 2000), 1000, 2000);   // simple throttle set
-  servoSetpoints[1] = minmax(map(data.ch[0], sbus_min, sbus_max, 1000, 2000), 1000, 2000);
+  servoSetpoints[0] = minmax(map(data.ch[0], sbus_min, sbus_max, 1001, 2000), 1001, 2000);   // simple throttle set
+  servoSetpoints[1] = minmax(map(data.ch[0], sbus_min, sbus_max, 1001, 2000), 1001, 2000);
 
                                   // add every control to the mix
   for(int f = 1; f < 4; f++){     // goes through AER of the TAER control axis
     for(int i = 2; i < 6; i++){   // goes through every Servo
-      servoSetpoints[i] = minmax(servoSetpoints[i] + (map(data.ch[f], sbus_min, sbus_max, -500, 500) * servoDirections[f][i]), 1000, 2000);
+      servoSetpoints[i] = minmax(servoSetpoints[i] + (pid_corrections[f] * servoDirections[f][i]), 1000, 2000);
     }
   }
 
+  arm_handling();
+}
+
+void arm_handling(){
   if (data.ch[4] < 500) {
     for (int i = 0; i < 6; i++) {
       servoSetpoints[i] = neutral_settings[i];

@@ -56,7 +56,7 @@ void loop() {
   pid_corrections[1] = gyroZ * p[3];
   //pid_corrections[0] = gyroX * p[0];
 
-  pid_corrections[3] += (lastGyroX - gyroX) * d[1];
+  pid_corrections[3] += (lastGyroX - gyroX) * d[1];   // D-val
   pid_corrections[2] += (lastGyroY - gyroY) * d[2];
   pid_corrections[1] += -(lastGyroZ - gyroZ) * d[3];
   //pid_corrections[0] += (lastGyroX - gyroX) * d[0];
