@@ -9,8 +9,8 @@ Armswitch = 4
 Pins:
 -------------------
 SD Karte
-CS = 13
-SCK = 10
+CS = 10
+SCK = 13
 MOSI = 11
 MISO = 12
 -------------------
@@ -80,7 +80,7 @@ int yaw_deg = 180;    // roll degrees at full stick reflection
 //------------------------------PID/RATES------------------------------------------
 
 //------------------------------SD CARD--------------------------------------------
-#define chipSelect 13    //CS for SD Card
+#define chipSelect 10    //CS for SD Card
 long driveNum;
 String filename;
 File blackbox_file;
@@ -99,7 +99,9 @@ void setup() {
   
   //---------------------MPU---------------------
   byte status = mpu.begin();
-  while(status!=0){ } // stop everything if unable to connect to MPU6050
+  while(status!=0){
+    dataBus.println("MPU init fail");
+  } // stop everything if unable to connect to MPU6050
   delay(1000);
   mpu.calcOffsets(true, true); // gyro and accelero
   //---------------------MPU---------------------
@@ -115,7 +117,10 @@ void setup() {
 
   File root;              //get drive Number
   root = SD.open("/");
+  dataBus.println("Before highestNum");
   driveNum = highestNumber(root, &filename);
+  dataBus.println("After highestNum");
+  dataBus.println(driveNum);
   //---------------------SD----------------------
 }
 
