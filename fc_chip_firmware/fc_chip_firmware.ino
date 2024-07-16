@@ -99,9 +99,7 @@ void setup() {
   
   //---------------------MPU---------------------
   byte status = mpu.begin();
-  while(status!=0){
-    dataBus.println("MPU init fail");
-  } // stop everything if unable to connect to MPU6050
+  while(status!=0){} // stop everything if unable to connect to MPU6050
   delay(1000);
   mpu.calcOffsets(true, true); // gyro and accelero
   //---------------------MPU---------------------
@@ -110,17 +108,12 @@ void setup() {
   byte sd_status = SD.begin(chipSelect);
   if (!sd_status){
     // don't do anything more:
-    while (1){
-      dataBus.println("SD init fail");
-    }
+    while (1){}
   }
 
   File root;              //get drive Number
   root = SD.open("/");
-  dataBus.println("Before highestNum");
   driveNum = highestNumber(root, &filename);
-  dataBus.println("After highestNum");
-  dataBus.println(driveNum);
   //---------------------SD----------------------
 }
 
@@ -241,14 +234,15 @@ void arm_handling(){
 
 void write_blackbox(bool active){
   if(active && last_file_write_state){
-    blackbox_file.println(millis());
+    blackbox_file.println("Appended to the EOF");
   }
   else if (!active && last_file_write_state) {
     blackbox_file.close();
     last_file_write_state = false;
   }
   else if (active && !last_file_write_state) {
-    blackbox_file = SD.open(filename, O_APPEND);
+    blackbox_file = SD.open(filename, FILE_WRITE);
+    //blackbox_file.seek(EOF);
     last_file_write_state = true;
   }
 }
