@@ -40,14 +40,16 @@ Softwareserial TX = 9
 #include <SD.h>
 #include "sbus.h"
 
-
+//------------------------------SERIAL---------------------------------------------
 MPU6050 mpu(Wire);
 
 SoftwareSerial dataBus(10, 9);
 
 bfs::SbusRx sbus_rx(&Serial);
 bfs::SbusData data;
+//------------------------------SERIAL---------------------------------------------
 
+//------------------------------CONTROL--------------------------------------------
 float neutral_settings[6] = {1001, 1001, 1440, 1450, 1450, 1400};
 float servoSetpoints[6] = {neutral_settings[0], neutral_settings[1], neutral_settings[2], neutral_settings[3], neutral_settings[4], neutral_settings[5]};
 float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
@@ -55,21 +57,19 @@ float servoDirections[4][6] = { {1, 1, 0, 0, 0, 0},     //thrust
                                 {0, 0, -1, 1, 0, 0},     //nick
                                 {0, 0, 1, 1, 1, 1}};    //yaw WITHOUT motors
                                 //{-1, 1, 1, 1, 1, 1}};    //yaw WITH motors
-
-
 int motors_idle = 1063;
-float gyroX, gyroY, gyroZ;
-float lastGyroX, lastGyroY, lastGyroZ;
-
 
 int sbus_min = 173;
 int sbus_max = 1810;
 
 bool armswitch_latch = false;
 bool arming_failed = true;
+//------------------------------CONTROL--------------------------------------------
 
+//------------------------------PID/RATES------------------------------------------
+float gyroX, gyroY, gyroZ;
+float lastGyroX, lastGyroY, lastGyroZ;
 float pid_corrections[4] {0, 0, 0, 0};    // thrust, roll, nick, yaw
-
 float p[4] = {0, 2, 3, 3};
 float d[4] = {0, 4, 6, 6};
 float i[4] = {0, 0, 0, 0};
@@ -77,18 +77,46 @@ float i[4] = {0, 0, 0, 0};
 int roll_deg = 180;    // roll degrees at full stick reflection
 int nick_deg = 180;    // roll degrees at full stick reflection
 int yaw_deg = 180;    // roll degrees at full stick reflection
+//------------------------------PID/RATES------------------------------------------
+
+//------------------------------SD CARD--------------------------------------------
+#define chipSelect 13    //CS for SD Card
+long driveNum;
+String filename;
+File blackbox_file;
+bool file_write = false;
+bool last_file_write_state = false;
+//------------------------------SD CARD--------------------------------------------
 
 void setup() {
 
+  //-------------------SERIAL--------------------
   sbus_rx.Begin();
-
   dataBus.begin(115200);
   Wire.begin();
+  SPI.begin();
+  //-------------------SERIAL--------------------
   
+  //---------------------MPU---------------------
   byte status = mpu.begin();
   while(status!=0){ } // stop everything if unable to connect to MPU6050
   delay(1000);
   mpu.calcOffsets(true, true); // gyro and accelero
+  //---------------------MPU---------------------
+
+  //---------------------SD----------------------
+  byte sd_status = SD.begin(chipSelect);
+  if (!sd_status){
+    // don't do anything more:
+    while (1){
+      dataBus.println("SD init fail");
+    }
+  }
+
+  File root;              //get drive Number
+  root = SD.open("/");
+  driveNum = highestNumber(root, &filename);
+  //---------------------SD----------------------
 }
 
 void loop() {
@@ -158,44 +186,65 @@ void calculateServoVals(){
     }
   }
 
-  arm_handling();
+  arm_handling();   // DO NOT REMOVE, SAFETY HAZARD
 }
 
 void arm_handling(){
-  if (data.ch[4] < 500) {
+  file_write = true;
+  if (data.ch[4] < 500) {   // Armswitch in off position
+    file_write = false;
     for (int i = 0; i < 6; i++) {
       servoSetpoints[i] = neutral_settings[i];
     }
   }
-  else if (data.ch[4] > 500 && data.ch[4] < 1500) {
+  else if (data.ch[4] > 500 && data.ch[4] < 1500) {   // Armswitch in middle position
+    file_write = false;
     servoSetpoints[0] = neutral_settings[0];
     servoSetpoints[1] = neutral_settings[1];
   }
-  else if (data.ch[4] > 1500){
+  else if (data.ch[4] > 1500){    // Armswitch in arm position
     servoSetpoints[0] = minmax(servoSetpoints[0], motors_idle, 2000);
     servoSetpoints[1] = minmax(servoSetpoints[1], motors_idle, 2000);
   }
 
-  if(data.ch[4] > 1500 && armswitch_latch == false){
-    if(data.ch[0] <= 200){
+  if(data.ch[4] > 1500 && armswitch_latch == false){    // Armswitch moved ti Arm position
+    if(data.ch[0] <= 200){    // If Thrust almost 0, arm the Fucker
       armswitch_latch = true;
       arming_failed = false;
     }
-    if(data.ch[0] > 200){
+    if(data.ch[0] > 200){     // If Thrust over almost 0, DO NOT arm the fucker, only arm if the Armswitch is moved into Middle position and back
+      file_write = false;
       armswitch_latch = true;
       arming_failed = true;
     }
   }
 
-  if(data.ch[4] < 1500 && armswitch_latch == true){
+  if(data.ch[4] < 1500 && armswitch_latch == true){     // If Arm mode is active and Armswitch is moved back, disarm
+    file_write = false;
     armswitch_latch = false;
     arming_failed = false;
   }
 
 
-  if(armswitch_latch == false || arming_failed == true){
+  if(armswitch_latch == false || arming_failed == true){      // If Disarmed or Armed with Thrust up, set Thrust outputs to 0
+    file_write = false;
     servoSetpoints[0] = neutral_settings[0];
     servoSetpoints[1] = neutral_settings[1];
+  }
+  write_blackbox(file_write);
+}
+
+void write_blackbox(bool active){
+  if(active && last_file_write_state){
+    blackbox_file.println(millis());
+  }
+  else if (!active && last_file_write_state) {
+    blackbox_file.close();
+    last_file_write_state = false;
+  }
+  else if (active && !last_file_write_state) {
+    blackbox_file = SD.open(filename, O_APPEND);
+    last_file_write_state = true;
   }
 }
 
@@ -207,4 +256,60 @@ float minmax(float val, float min, float max){
     val = max;
   }
   return val;
+}
+
+long highestNumber(File dir, String* filenameaddress){
+  long highestNum = 0;
+  while (true) {
+
+    File entry =  dir.openNextFile();
+    if (! entry) {
+      // no more files
+      break;
+    }
+
+    String filename = String(entry.name());
+
+    String extractedNum = String(filename[0]);
+    extractedNum += String(filename[1]);
+    extractedNum += String(filename[2]);
+    extractedNum += String(filename[3]);
+    extractedNum += String(filename[4]);
+
+    int number = extractedNum.toInt();
+    if(number > highestNum){
+      highestNum = number;
+    }
+
+  }
+
+  highestNum += 1;
+
+  *filenameaddress = "/";
+
+  if (highestNum < 10) {
+    *filenameaddress += "0000";
+    *filenameaddress += String(highestNum);
+    *filenameaddress += ".txt";
+  }
+  else if (highestNum < 100) {
+    *filenameaddress += "000";
+    *filenameaddress += String(highestNum);
+    *filenameaddress += ".txt";
+  }
+  else if (highestNum < 1000) {
+    *filenameaddress += "00";
+    *filenameaddress += String(highestNum);
+    *filenameaddress += ".txt";
+  }
+  else if (highestNum < 10000) {
+    *filenameaddress += "0";
+    *filenameaddress += String(highestNum);
+    *filenameaddress += ".txt";
+  }
+  else if (highestNum < 100000) {
+    *filenameaddress += String(highestNum);
+    *filenameaddress += ".txt";
+  }
+  return highestNum;
 }
