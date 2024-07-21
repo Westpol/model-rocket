@@ -114,6 +114,7 @@ void setup() {
   File root;              //get drive Number
   root = SD.open("/");
   driveNum = highestNumber(root, &filename);
+  root.close();
   //---------------------SD----------------------
 }
 
