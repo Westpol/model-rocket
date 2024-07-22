@@ -40,12 +40,14 @@ Softwareserial TX = 9
 #include <SD.h>
 #include "sbus.h"
 
+HardwareSerial Serial1(PA10, PA9);
+
 //------------------------------SERIAL---------------------------------------------
 MPU6050 mpu(Wire);
 
 SoftwareSerial dataBus(10, 9);
 
-bfs::SbusRx sbus_rx(&Serial);
+bfs::SbusRx sbus_rx(&Serial1);
 bfs::SbusData data;
 //------------------------------SERIAL---------------------------------------------
 
