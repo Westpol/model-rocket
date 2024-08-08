@@ -6,24 +6,25 @@ Elevator = 2
 Roll = 3
 Armswitch = 4
 
-Pins:
+Pins:     (OUTDATED!)
 -------------------
 SD Karte
-CS = 10
-SCK = 13
-MOSI = 11
-MISO = 12
+CS = PB9
+SCK = PA5
+MOSI = PA7
+MISO = PA6
 -------------------
 Gyro
-SCL = A5
-SDA = A4
+SCL = PB6
+SDA = PB7
 -------------------
 Baro
-SCL = A5
-SDA = A4
+SCL = PB6
+SDA = PB7
 -------------------
 XF Nano RX
-SBUS = 0
+SBUS = Serial1 RX PA10
+-Unused- = Serial1 TX PA9
 -------------------
 Servo Comm
 Softwareserial TX = 9
