@@ -50,7 +50,8 @@ class BMP280{
 
   void read_continuous(unsigned char* bytes, int len);
   void getConstants();
-  void convertData();
+  void convertAll();
+  void convertTemp();
 };
 
 #endif

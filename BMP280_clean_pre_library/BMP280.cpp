@@ -40,7 +40,7 @@ void BMP280::update(){
   _press = ((uint32_t)*(bytes) << 12) + ((uint32_t)*(bytes + 1) << 4) + ((uint32_t)*(bytes + 2) >> 4);
   _temp = ((uint32_t)*(bytes + 3) << 12) + ((uint32_t)*(bytes + 4) << 4) + ((uint32_t)*(bytes + 5) >> 4);
   free(bytes);
-  convertData();
+  convertAll();
 }
 
 
@@ -51,18 +51,13 @@ void BMP280::updateTemp(){
   read_continuous(bytes, 3);
   _temp = ((uint32_t)*(bytes) << 12) + ((uint32_t)*(bytes + 1) << 4) + ((uint32_t)*(bytes + 2) >> 4);
   free(bytes);
-  convertData();
+  convertTemp();
 }
 
 
 void BMP280::updatePress(){
-  // get raw pressure values
-  unsigned char* bytes = (unsigned char*)malloc(sizeof(unsigned char) * 3);
-  SPI.transfer(0xF7);
-  read_continuous(bytes, 3);
-  _press = ((uint32_t)*(bytes) << 12) + ((uint32_t)*(bytes + 1) << 4) + ((uint32_t)*(bytes + 2) >> 4);
-  free(bytes);
-  convertData();
+  // temperature is also needed to calculate pressure -> just use normal update function in that case
+  update();
 }
 
 
@@ -82,7 +77,7 @@ void BMP280::read_continuous(unsigned char* bytes, int len){
   }
 }
 
-void BMP280::convertData(){
+void BMP280::convertAll(){
   int32_t t_fine;
   int32_t tVar1, tVar2, T;
 
@@ -114,6 +109,19 @@ void BMP280::convertData(){
     p = ((p + var1 + var2) >> 8) + (((int64_t)_dig_P7) << 4);
     _press = p / 256.0;
   }
+}
+
+void BMP280::convertTemp(){
+  int32_t t_fine;
+  int32_t tVar1, tVar2, T;
+
+  tVar1 = ((((_rawTemp >> 3) - ((int32_t)_dig_T1 << 1))) * ((int32_t)_dig_T2)) >> 11;
+  tVar2 = (((((_rawPress >> 4) - ((int32_t)_dig_T1)) * ((_rawPress >> 4) - ((int32_t)_dig_T1))) >> 12) * ((int32_t)_dig_T3)) >> 14;
+
+  t_fine = tVar1 + tVar2;
+  T = (t_fine * 5 + 128) >> 8;
+
+  _temp = T / 100.0;
 }
 
 void BMP280::getConstants(){
