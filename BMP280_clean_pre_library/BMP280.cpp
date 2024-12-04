@@ -28,6 +28,8 @@ int BMP280::init(){
   digitalWrite(_cs, LOW);   // write mode and settings to chip
   SPI.transfer(0xF4 & _writeValue);
   SPI.transfer(_mode | _osrs_p | _osrs_t);
+  SPI.transfer(0xF5 & _writeValue);
+  SPI.transfer(_t_sb | _filter | _spi_mode);
   digitalWrite(_cs, HIGH);
   return 1;
 }
