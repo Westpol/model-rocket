@@ -40,6 +40,7 @@ void BMP280::update(){
   _press = ((uint32_t)*(bytes) << 12) + ((uint32_t)*(bytes + 1) << 4) + ((uint32_t)*(bytes + 2) >> 4);
   _temp = ((uint32_t)*(bytes + 3) << 12) + ((uint32_t)*(bytes + 4) << 4) + ((uint32_t)*(bytes + 5) >> 4);
   free(bytes);
+  convertData();
 }
 
 
@@ -50,6 +51,7 @@ void BMP280::updateTemp(){
   read_continuous(bytes, 3);
   _temp = ((uint32_t)*(bytes) << 12) + ((uint32_t)*(bytes + 1) << 4) + ((uint32_t)*(bytes + 2) >> 4);
   free(bytes);
+  convertData();
 }
 
 
@@ -60,6 +62,7 @@ void BMP280::updatePress(){
   read_continuous(bytes, 3);
   _press = ((uint32_t)*(bytes) << 12) + ((uint32_t)*(bytes + 1) << 4) + ((uint32_t)*(bytes + 2) >> 4);
   free(bytes);
+  convertData();
 }
 
 
@@ -77,6 +80,19 @@ void BMP280::read_continuous(unsigned char* bytes, int len){
   for(int i = 0; i < len; i++){
     *(bytes + i) = SPI.transfer(0);
   }
+}
+
+void BMP280::convertData(){
+  int32_t t_fine;
+  int32_t var1, var2, T;
+
+  var1 = ((((_rawTemp >> 3) - ((int32_t)_dig_T1 << 1))) * ((int32_t)_dig_T2)) >> 11;
+  var2 = (((((_rawPress >> 4) - ((int32_t)_dig_T1)) * ((_rawPress >> 4) - ((int32_t)_dig_T1))) >> 12) * ((int32_t)_dig_T3)) >> 14;
+
+  t_fine = var1 + var2;
+  T = (t_fine * 5 + 128) >> 8;
+
+  _temp = T / 100.0;
 }
 
 void BMP280::getConstants(){

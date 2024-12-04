@@ -10,8 +10,11 @@ double press;
 BMP280 bmp(1000000, chipSelectPin);
 
 void setup() {
-  bmp.init();
   Serial.begin(115200);
+  while(!bmp.init()){
+    Serial.println("No BMP280 Found!");
+    delay(1000);
+  }
   delay(100);
 }
 
