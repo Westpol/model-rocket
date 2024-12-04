@@ -31,10 +31,10 @@ class BMP280{
   unsigned char _filter = B00011100;
   unsigned char _spi_mode = B00000000;
 
-  double _temp;
-  double _press;
-  uint32_t _rawTemp;
-  uint32_t _rawPress;
+  double _temp = 0;
+  double _press = 0;
+  int32_t _rawTemp = 0;
+  int32_t _rawPress = 0;
 
   // constant calibration values temperature
   uint16_t _dig_T1;
