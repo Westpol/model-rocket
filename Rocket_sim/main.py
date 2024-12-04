@@ -1,6 +1,7 @@
 import pygame
 import time
 import math
+from matplotlib import pyplot as plt
 
 '''
 ALL DISTANCE VALUES IN METERS, SET SCALE ACCORDINGLY
@@ -39,19 +40,22 @@ class Rocket:
     def update(self):
         deltaT = (time.time() - self.lastUpdate)
         thrust = self.thrust_curve()
-        self.a_x3 = self.g * (self.weight - thrust[0] * self.maxThrustForce1 + thrust[1] * self.maxThrustForce2) * deltaT
-        self.v_x3 += self.a_x3 * deltaT
+        self.a_x3 = self.g * -(-self.weight + (thrust[0] * self.maxThrustForce1) + (thrust[1] * self.maxThrustForce2)) * deltaT
+        self.v_x3 += self.a_x3 *deltaT
         self.x3 += self.v_x3 * deltaT
         self.lastUpdate = time.time()
 
 
 class UI:
 
-    def __init__(self, rocketClass):
+    def __init__(self, pygame_window, rocketClass):
         self.rocketClass = rocketClass
+        self.pygame_window = pygame_window
 
     def update(self):
         self.rocketClass.update()
+        pygame.draw.line(self.pygame_window, (255, 255, 255), (0, 0), (1000, 1000))
+        pygame.display.flip()
 
 
 class FC:
@@ -60,14 +64,24 @@ class FC:
 
 
 if __name__ == '__main__':
+    valueList = []
     pygame.init()
     display = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
     rocket = Rocket()
-    ui = UI(rocket)
+    ui = UI(display, rocket)
     for i in range(101):
         ui.rocketClass.thrust1 = i / 100
         ui.rocketClass.thrust2 = i / 100
-        print(str(i) + "%" + "   =   " + str(ui.rocketClass.a_x3))
+        print(str(i) + "%" + "   =   " + str(ui.rocketClass.x3))
+        valueList.append(ui.rocketClass.x3)
         ui.update()
         time.sleep(0.01)
+    for f in range(1000):
+        print(str(100) + "%" + "   =   " + str(ui.rocketClass.x3))
+        valueList.append(ui.rocketClass.x3)
+        ui.update()
+        time.sleep(0.01)
+    pygame.quit()
+    plt.plot(valueList)
+    plt.show()
