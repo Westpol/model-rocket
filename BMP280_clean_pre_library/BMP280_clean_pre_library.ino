@@ -1,4 +1,3 @@
-#include "SPI.h"
 #include "BMP280.h"
 
 #define chipSelectPin 10
@@ -19,9 +18,11 @@ void setup() {
 }
 
 void loop() {
+
   bmp.update();
   temp = bmp.getTemp();
   press = bmp.getPress();
+
   Serial.print("Temp raw val:  ");
   Serial.println(temp, DEC);
   Serial.print("Press raw val: ");

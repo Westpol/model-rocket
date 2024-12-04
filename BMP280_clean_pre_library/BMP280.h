@@ -1,4 +1,3 @@
-#include <stdint.h>
 #ifndef BMP280_h
 
 #define BMP280_h
