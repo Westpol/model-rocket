@@ -1,6 +1,7 @@
 #include "BMP280.h"
 #include "Arduino.h"
 #include "SPI.h"
+#include "math.h"
 
 
 BMP280::BMP280(unsigned long spi_speed, int cs){
@@ -48,25 +49,6 @@ void BMP280::update(){
 }
 
 
-void BMP280::updateTemp(){
-  // get raw temperature values
-  unsigned char* bytes = (unsigned char*)malloc(sizeof(unsigned char) * 3);
-  digitalWrite(_cs, LOW);
-  SPI.transfer(0xFA);
-  read_continuous(bytes, 3);
-  digitalWrite(_cs, HIGH);
-  _rawTemp = ((int32_t)*(bytes) << 12) | ((int32_t)*(bytes + 1) << 4) | ((int32_t)*(bytes + 2) >> 4);
-  free(bytes);
-  convertTemp();
-}
-
-
-void BMP280::updatePress(){
-  // temperature is also needed to calculate pressure -> just use normal update function in that case
-  update();
-}
-
-
 double BMP280::getTemp(){
   return _temp;
 }
@@ -94,7 +76,7 @@ void BMP280::convertAll(){
   t_fine = tVar1 + tVar2;
   T = (t_fine * 5 + 128) >> 8;
 
-  _temp = T;
+  _temp = T / 100.0;
 
   int32_t adc_P = _rawPress;
   int64_t var1, var2, p;

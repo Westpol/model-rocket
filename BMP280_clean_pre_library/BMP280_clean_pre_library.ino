@@ -23,9 +23,11 @@ void loop() {
   temp = bmp.getTemp();
   press = bmp.getPress();
 
-  Serial.print("Temp raw val:  ");
-  Serial.println(temp, DEC);
-  Serial.print("Press raw val: ");
-  Serial.println(press, DEC);
+  Serial.print("Temperature: ");
+  Serial.print(temp);
+  Serial.println("°C");
+  Serial.print("  Pressure : ");
+  Serial.print((press / 100.0));
+  Serial.println("hpa");
   delay(100);
 }

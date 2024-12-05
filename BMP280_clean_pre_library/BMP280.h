@@ -10,8 +10,6 @@ class BMP280{
   BMP280(unsigned long speed, int cs);
   int init();
   void update();
-  void updateTemp();
-  void updatePress();
   double getTemp();
   double getPress();
 
