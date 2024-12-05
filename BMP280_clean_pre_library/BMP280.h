@@ -58,4 +58,19 @@ class BMP280{
   void convertTemp();
 };
 
+
+#define T1_sample 27504;
+#define T2_sample 26435;
+#define T3_sample -1000;
+#define P1_sample 36477;
+#define P2_sample -10685;
+#define P3_sample 3024;
+#define P4_sample 2855;
+#define P5_sample 140;
+#define P6_sample -7;
+#define P7_sample 15500;
+#define P8_sample -14600;
+#define P9_sample 6000;
+#define T_sample 519888;
+#define P_sample 415148;
 #endif
