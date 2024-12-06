@@ -59,6 +59,16 @@ double BMP280::getPress(){
 }
 
 
+double BMP280::tempConversion(double temp){
+  return ((0.0289091 * temp + 7.89455) / 100.0);    //meters per pascal at given temperature
+}
+
+
+double BMP280::getAltitude(double referencePress){
+  return (referencePress - _press) * tempConversion(_temp);
+}
+
+
 void BMP280::read_continuous(unsigned char* bytes, int len){
   for(int i = 0; i < len; i++){
     *(bytes + i) = SPI.transfer(0);

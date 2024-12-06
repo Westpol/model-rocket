@@ -12,6 +12,7 @@ class BMP280{
   void update();
   double getTemp();
   double getPress();
+  double getAltitude(double referencePress);
 
   private:
   unsigned long _spi_speed;
@@ -54,6 +55,7 @@ class BMP280{
   void getConstants();
   void convertAll();
   void convertTemp();
+  double tempConversion(double temp);
 };
 
 // Function to get the correct meter readouts per hpa: m = 0.0289091 * hpa + 7.89455
