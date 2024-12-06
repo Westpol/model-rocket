@@ -5,6 +5,7 @@
 
 double temp;
 double press;
+double referencePress;
 
 BMP280 bmp(1000000, chipSelectPin);
 
@@ -14,7 +15,9 @@ void setup() {
     Serial.println("No BMP280 Found!");
     delay(1000);
   }
-  delay(100);
+  delay(1000);
+  bmp.update();
+  referencePress = bmp.getPress();
 }
 
 void loop() {
@@ -23,11 +26,13 @@ void loop() {
   temp = bmp.getTemp();
   press = bmp.getPress();
 
-  Serial.print("Temperature: ");
+  Serial.println(bmp.getAltitude(referencePress));
+
+  /*Serial.print("Temperature: ");
   Serial.print(temp);
   Serial.println("°C");
   Serial.print("  Pressure : ");
   Serial.print((press / 100.0));
-  Serial.println("hpa");
+  Serial.println("hpa");*/
   delay(100);
 }
