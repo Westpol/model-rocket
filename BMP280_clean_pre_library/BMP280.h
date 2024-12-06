@@ -8,18 +8,18 @@
 class BMP280{
   public:
   BMP280(unsigned long speed, int cs);
-  int init();
-  void update();
-  double getTemp();
-  double getPress();
-  double getAltitude(double referencePress);
+  int init();     // sets up SPI, gets Constants, sets mode
+  void update();  // gets adc values for temp and press and calls convertAll to save temp and pressure to variables
+  double getTemp();   // sames as update, only temperature though
+  double getPress();    // only calls update() because temp is needed for pressure conversion
+  double getAltitude(double referencePress);    // calculates altitude relative to given pressure considering temperature changes
 
   private:
-  unsigned long _spi_speed;
-  int _cs;
+  unsigned long _spi_speed;   // the SPI SCL speed in herz
+  int _cs;    // the SPI chip select pin
 
-  unsigned char _readValue = 0x80;
-  unsigned char _writeValue = 0x7F;
+  const unsigned char _readValue = 0x80;    // first bit 1, all others 0 (addr | _readValue) to send read command
+  const unsigned char _writeValue = 0x7F;   // first bit 0, all others 1 (addr & _writeValue) to send write command
 
   // Mode setup normal, 16x press, 16x temp
   unsigned char _mode = B00000011;  // Normal Mode [1,1]
@@ -30,10 +30,10 @@ class BMP280{
   unsigned char _filter = B00011100;
   unsigned char _spi_mode = B00000000;
 
-  double _temp = 0;
-  double _press = 0;
-  int32_t _rawTemp = 0;
-  int32_t _rawPress = 0;
+  double _temp = 0;     // Temperature in degrees celsius
+  double _press = 0;    // Pressure in Pascal
+  int32_t _rawTemp = 0;   // ADC temperature value, useless for humans
+  int32_t _rawPress = 0;  // ADC Pressure value, useless for humans
 
   // constant calibration values temperature
   uint16_t _dig_T1;
@@ -51,14 +51,15 @@ class BMP280{
   int16_t _dig_P8;
   int16_t _dig_P9;
 
-  void read_continuous(unsigned char* bytes, int len);
-  void getConstants();
-  void convertAll();
-  void convertTemp();
-  double tempConversion(double temp);
+  void read_continuous(unsigned char* bytes, int len);    // reads len ammount of addresses
+  void getConstants();    // gets conversion constants for temp and press at the beginning and stores them in _dig_T and _dig_P variables
+  void convertAll();    // converts raw adc values to temperature and pressure
+  void convertTemp();   // same as convertAll, only with temp
+  double tempConversion(double temp);   // returns meters per pascal in relation to temperature
 };
 
-// Function to get the correct meter readouts per hpa: m = 0.0289091 * hpa + 7.89455
+/*
+Function to get the correct meter readouts per hpa: m = 0.0289091 * hpa + 7.89455
 #define meter_per_hpa_neg_10_degree = 7.61;
 #define meter_per_hpa_neg_5_degree = 7.75;
 #define meter_per_hpa_0_degree = 7.89;
@@ -70,7 +71,7 @@ class BMP280{
 #define meter_per_hpa_30_degree = 8.76;
 #define meter_per_hpa_35_degree = 8.91;
 #define meter_per_hpa_40_degree = 9.05;
-
+*/
 #define T1_sample 27504;
 #define T2_sample 26435;
 #define T3_sample -1000;
