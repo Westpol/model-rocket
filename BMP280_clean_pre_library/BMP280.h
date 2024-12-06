@@ -56,6 +56,18 @@ class BMP280{
   void convertTemp();
 };
 
+// Function to get the correct meter readouts per hpa: m = 0.0289091 * hpa + 7.89455
+#define meter_per_hpa_neg_10_degree = 7.61;
+#define meter_per_hpa_neg_5_degree = 7.75;
+#define meter_per_hpa_0_degree = 7.89;
+#define meter_per_hpa_5_degree = 8.04;
+#define meter_per_hpa_10_degree = 8.18;
+#define meter_per_hpa_15_degree = 8.33;
+#define meter_per_hpa_20_degree = 8.47;
+#define meter_per_hpa_25_degree = 8.62;
+#define meter_per_hpa_30_degree = 8.76;
+#define meter_per_hpa_35_degree = 8.91;
+#define meter_per_hpa_40_degree = 9.05;
 
 #define T1_sample 27504;
 #define T2_sample 26435;
