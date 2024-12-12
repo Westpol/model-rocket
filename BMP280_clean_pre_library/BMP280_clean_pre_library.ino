@@ -1,6 +1,6 @@
 #include "BMP280.h"
 
-#define chipSelectPin 10
+#define chipSelectPin 15
 
 
 double temp;
@@ -26,7 +26,7 @@ void loop() {
   temp = bmp.getTemp();
   press = bmp.getPress();
 
-  Serial.println(bmp.getAltitude(referencePress));
+  Serial.println(temp);
 
   /*Serial.print("Temperature: ");
   Serial.print(temp);

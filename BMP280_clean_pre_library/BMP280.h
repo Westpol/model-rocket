@@ -22,13 +22,13 @@ class BMP280{
   const unsigned char _writeValue = 0x7F;   // first bit 0, all others 1 (addr & _writeValue) to send write command
 
   // Mode setup normal, 16x press, 16x temp
-  unsigned char _mode = B00000011;  // Normal Mode [1,1]
-  unsigned char _osrs_p = B00010100; // oversampling x16 [1, 0, 1]
-  unsigned char _osrs_t = B01000000; // oversampling x16 [1, 0, 1]
+  unsigned char _mode = 0b00000011;  // Normal Mode [1,1]
+  unsigned char _osrs_p = 0b00010100; // oversampling x16 [1, 0, 1]
+  unsigned char _osrs_t = 0b01000000; // oversampling x16 [1, 0, 1]
   
-  unsigned char _t_sb = B00000000;
-  unsigned char _filter = B00011100;
-  unsigned char _spi_mode = B00000000;
+  unsigned char _t_sb = 0b00000000;
+  unsigned char _filter = 0b00011100;
+  unsigned char _spi_mode = 0b00000000;
 
   double _temp = 0;     // Temperature in degrees celsius
   double _press = 0;    // Pressure in Pascal
